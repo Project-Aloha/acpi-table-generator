@@ -58,44 +58,33 @@ jobs:
             echo "Found platforms: $PLATFORMS_JSON"
             echo "platforms=$PLATFORMS_JSON" >> $GITHUB_OUTPUT
 
-        - name: Prepare Node uploader
-          run: |
-            npm init -y
-            npm install @actions/artifact@2.4.2
+        - name: Upload all platform directories as a single artifact
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: aml-all
+            path: artifacts
 
-        - name: Write uploader script
-          run: |
-            cat > upload_artifacts.js <<'JS'
-const fs = require('fs');
-const path = require('path');
-const artifact = require('@actions/artifact');
+    upload:
+      name: Upload platform artifacts
+      needs: build
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+          platform: ${{ fromJson(needs.build.outputs.platforms) }}
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
 
-async function main() {
-  const client = artifact.create();
-  const platforms = JSON.parse(process.env.PLATFORMS_JSON || '[]');
-  if (!platforms.length) {
-    console.log('No platforms to upload');
-    return;
-  }
-  for (const p of platforms) {
-    const dir = path.join('artifacts', p);
-    if (!fs.existsSync(dir)) {
-      console.log(`Skipping ${p}, directory not found: ${dir}`);
-      continue;
-    }
-    const files = fs.readdirSync(dir).map(f => path.join(dir, f));
-    console.log(`Uploading artifact ${p} with files:`, files);
-    // uploadArtifact(name, files, rootDirectory)
-    await client.uploadArtifact(p, files, dir);
-  }
-}
+        - name: Download aml-all artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: aml-all
+            path: ./
 
-main().catch(err => { console.error(err); process.exit(1); });
-JS
-
-        - name: Upload per-platform artifacts (single job, sequential)
-          env:
-            PLATFORMS_JSON: ${{ steps.prepare.outputs.platforms }}
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          run: |
-            node upload_artifacts.js
+        - name: Upload per-platform artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: ${{ matrix.platform }}
+            path: artifacts/${{ matrix.platform }}
