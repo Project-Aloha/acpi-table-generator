@@ -57,6 +57,12 @@ jobs:
           echo "Found platforms: $PLATFORMS_JSON"
           echo "platforms=$PLATFORMS_JSON" >> $GITHUB_OUTPUT
 
+      - name: Upload all platform zips as a single artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aml-zips
+          path: artifacts/*.zip
   upload:
     name: Upload platform artifacts
     needs: build
@@ -66,12 +72,22 @@ jobs:
       matrix:
         platform: ${{ fromJson(needs.build.outputs.platforms) }}
     steps:
-      - name: Ensure artifacts exist
+      - name: Download zips artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: aml-zips
+          path: downloaded_artifacts
+
+      - name: Ensure platform zip exists
         run: |
-          ls -al artifacts || true
+          ls -al downloaded_artifacts || true
+          if [ ! -f "downloaded_artifacts/${{ matrix.platform }}.zip" ]; then
+            echo "Platform zip not found: downloaded_artifacts/${{ matrix.platform }}.zip"
+            false
+          fi
 
       - name: Upload artifact for platform
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform }}
-          path: artifacts/${{ matrix.platform }}.zip
+          path: downloaded_artifacts/${{ matrix.platform }}.zip
