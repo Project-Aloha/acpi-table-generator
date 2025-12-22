@@ -6,7 +6,7 @@
 
 /* Platform specific configuration */
 #define NUM_CORES 8
-#define NUM_CLUSTERS 3
+#define NUM_CLUSTERS 2
 #define NUM_SYSTEM 1
 #define L1_CACHES_COUNT 2
 #define L2_CACHES_COUNT 1
@@ -52,14 +52,10 @@ PPTT_START{
     //  - parents: System
     //  - private resources: L2 Cache
     PPTT_DECLARE_PROCESSOR_HIERARCHY_CLUSTER(0, 0, PPTT_REFERENCE_SYSTEM),
-    // Cluster 1 (3 cores)
+    // Cluster 1 (4 cores)
     //  - parents: System
     //  - private resources: L2 Cache
     PPTT_DECLARE_PROCESSOR_HIERARCHY_CLUSTER(1, 0, PPTT_REFERENCE_SYSTEM),
-    // Cluster 2 (1 core)
-    //  - parents: System
-    //  - private resources: none
-    PPTT_DECLARE_PROCESSOR_HIERARCHY_CLUSTER(2, 0, PPTT_REFERENCE_SYSTEM),
 
 
     // Physical CPUs
@@ -79,7 +75,7 @@ PPTT_START{
         3, 3, PPTT_REFERENCE_CLUSTER(0), PPTT_REFERENCE_CACHE(2),
         PPTT_REFERENCE_CACHE(3)),
 
-    // Cluster 1 CPUs (3 cores)
+    // Cluster 1 CPUs (4 cores)
     //  - parents: Cluster 1
     //  - private resources: L1I, L1D, L2
     PPTT_DECLARE_PROCESSOR_HIERARCHY_PHYSICAL_CPU(
@@ -91,11 +87,7 @@ PPTT_START{
     PPTT_DECLARE_PROCESSOR_HIERARCHY_PHYSICAL_CPU(
         6, 6, PPTT_REFERENCE_CLUSTER(1), PPTT_REFERENCE_CACHE(2),
         PPTT_REFERENCE_CACHE(3)),
-
-    // Cluster 2 CPU (1 core)
-    //  - parents: Cluster 2
-    //  - private resources: L1I, L1D, L2
     PPTT_DECLARE_PROCESSOR_HIERARCHY_PHYSICAL_CPU(
-        7, 7, PPTT_REFERENCE_CLUSTER(2), PPTT_REFERENCE_CACHE(2),
+        7, 7, PPTT_REFERENCE_CLUSTER(1), PPTT_REFERENCE_CACHE(2),
         PPTT_REFERENCE_CACHE(3)),
 } PPTT_END
