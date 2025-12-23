@@ -23,6 +23,8 @@
    (unsigned long long)(mask))
 
 // Standard type definitions
+typedef char CHAR8;
+_Static_assert(sizeof(CHAR8) == 1, "CHAR8 size is incorrect");
 typedef uint8_t UINT8;
 typedef uint16_t UINT16;
 typedef uint32_t UINT32;

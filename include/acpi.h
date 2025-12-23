@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <common.h>
 
 /** References
  * 1. ACPI 6.6 Spec
@@ -14,16 +15,16 @@
 
 // Header
 typedef struct {
-  char Signature[4]; // something like "PPTT"
+  CHAR8 Signature[4]; // something like "PPTT"
   uint32_t Length;   // Length of entire table in bytes
   uint8_t Revision;  // Revision (3)
   uint8_t Checksum;  // Checksum
-  char OemId[6];     // OEM ID
-  char
+  CHAR8 OemId[6];     // OEM ID
+  CHAR8
       OemTableId[8]; // For the PPTT, the table ID is the manufacturer model ID.
   uint32_t
       OemRevision;   // OEM revision of the PPTT for the supplied OEM Table ID.
-  char CreatorId[4]; // Vendor ID of utility that created the table
+  CHAR8 CreatorId[4]; // Vendor ID of utility that created the table
   uint32_t CreatorRevision; // Revision of utility that created the table
 } __attribute__((packed)) ACPI_TABLE_HEADER;
 _Static_assert(sizeof(ACPI_TABLE_HEADER) == 36,

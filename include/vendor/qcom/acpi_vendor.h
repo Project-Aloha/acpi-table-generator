@@ -2,6 +2,13 @@
 
 #define ACPI_TABLE_HEADER_OEM_ID 'Q', 'C', 'O', 'M', ' ', ' ' // "QCOM"
 #define ACPI_TABLE_HEADER_OEM_TABLE_ID 'Q', 'C', 'O', 'M', 'E', 'D', 'K', '2' // "QCOMEDK2"
+#define ACPI_CSRT_VENDOR_ID 0x4D4F4351ULL // 'M', 'O', 'C', 'Q'
+#define ACPI_CSRT_SUB_VENDOR_ID 0x0ULL
+
+enum ACPI_CSRT_DEVICE_ID {
+  DEVICE_ID_TIMER = 0x100B,
+  DEVICE_ID_MISC = 0x100C,
+};
 
 #define DBG2_DECLARE_QCOM_SDM845_UARD(name, namepath, address)                 \
   .UARD = {                                                                    \
@@ -32,4 +39,3 @@
       .AddressSize = {0x1000},                                                 \
       .NamespaceString = namepath,                                             \
   }
-
