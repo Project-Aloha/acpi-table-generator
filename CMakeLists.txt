@@ -34,36 +34,24 @@ target_include_directories(acpi_extractor PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-# Build iort_reader tool
-add_executable(iort_reader src/iort_reader.c lib/utils.c)
-target_include_directories(iort_reader PRIVATE 
-    ${CMAKE_SOURCE_DIR}/include
-)
+# Automatically scan src/dummy/ for ACPI table source files
+# Each .c file corresponds to a table type (e.g., csrt.c -> csrt table type)
+file(GLOB DUMMY_SOURCE_FILES "${CMAKE_SOURCE_DIR}/src/dummy/*.c")
+set(ACPI_TABLE_TYPES "")
 
-# Ensure tools are built by default
-add_custom_target(tools ALL DEPENDS acpi_extractor iort_reader)
+foreach(SOURCE_FILE ${DUMMY_SOURCE_FILES})
+    get_filename_component(TABLE_TYPE ${SOURCE_FILE} NAME_WE)
+    list(APPEND ACPI_TABLE_TYPES ${TABLE_TYPE})
+    
+    # Set header file name (e.g., csrt.c -> csrt.h)
+    set(ACPI_TABLE_${TABLE_TYPE}_HEADER "${TABLE_TYPE}.h")
+    set(ACPI_TABLE_${TABLE_TYPE}_SOURCE "${SOURCE_FILE}")
+    
+    message(STATUS "Detected ACPI table type: ${TABLE_TYPE}")
+endforeach()
 
-# Define supported ACPI table types and their corresponding source files
-# Format: TABLE_NAME -> (header_file, source_file)
-set(ACPI_TABLE_TYPES "pptt;gtdt;madt;dbg2;mcfg;spcr;csrt;facp;facs;")
-set(ACPI_TABLE_dbg2_HEADER "dbg2.h")
-set(ACPI_TABLE_dbg2_SOURCE "src/dummy/dbg2.c")
-set(ACPI_TABLE_pptt_HEADER "pptt.h")
-set(ACPI_TABLE_pptt_SOURCE "src/dummy/pptt.c")
-set(ACPI_TABLE_gtdt_HEADER "gtdt.h")
-set(ACPI_TABLE_gtdt_SOURCE "src/dummy/gtdt.c")
-set(ACPI_TABLE_csrt_HEADER "csrt.h")
-set(ACPI_TABLE_csrt_SOURCE "src/dummy/csrt.c")
-set(ACPI_TABLE_facp_HEADER "facp.h")
-set(ACPI_TABLE_facp_SOURCE "src/dummy/facp.c")
-set(ACPI_TABLE_facs_HEADER "facs.h")
-set(ACPI_TABLE_facs_SOURCE "src/dummy/facs.c")
-set(ACPI_TABLE_madt_HEADER "madt.h")
-set(ACPI_TABLE_madt_SOURCE "src/dummy/madt.c")
-set(ACPI_TABLE_mcfg_HEADER "mcfg.h")
-set(ACPI_TABLE_mcfg_SOURCE "src/dummy/mcfg.c")
-set(ACPI_TABLE_spcr_HEADER "spcr.h")
-set(ACPI_TABLE_spcr_SOURCE "src/dummy/spcr.c")
+# Sort table types for consistent ordering
+list(SORT ACPI_TABLE_TYPES)
 
 # Scan include/vendor directory for all vendors and targets
 file(GLOB VENDOR_DIRS "${CMAKE_SOURCE_DIR}/include/vendor/*")
@@ -90,7 +78,7 @@ foreach(VENDOR_DIR ${VENDOR_DIRS})
                 
                 foreach(TABLE_TYPE ${ACPI_TABLE_TYPES})
                     set(HEADER_FILE "${TARGET_DIR}/${ACPI_TABLE_${TABLE_TYPE}_HEADER}")
-                    set(SOURCE_FILE "${CMAKE_SOURCE_DIR}/${ACPI_TABLE_${TABLE_TYPE}_SOURCE}")
+                    set(SOURCE_FILE "${ACPI_TABLE_${TABLE_TYPE}_SOURCE}")
                     
                     if(EXISTS ${HEADER_FILE} AND EXISTS ${SOURCE_FILE})
                         # Check if header file is not empty (empty file means placeholder)
@@ -170,7 +158,9 @@ foreach(DEVICE_TARGET ${ALL_DEVICE_TARGETS})
     # ACPI table output paths
     set(AML_FILE "${TARGET_OUTPUT_DIR}/${TABLE_NAME_UPPER}.aml")
     set(DSL_FILE "${TARGET_OUTPUT_DIR}/${TABLE_NAME_UPPER}.dsl")
-    set(IASL_LOG_FILE "${TARGET_OUTPUT_DIR}/${TABLE_NAME_UPPER}_iasl.log")
+    set(DEVICE_IASL_LOG_FILE "${TARGET_OUTPUT_DIR}/iasl.log")
+    set(HEX_OUTPUT_DIR "${CMAKE_BINARY_DIR}/hex")
+    file(MAKE_DIRECTORY ${HEX_OUTPUT_DIR})
     
     # Add custom command: extract ACPI table
     add_custom_command(
@@ -187,11 +177,12 @@ foreach(DEVICE_TARGET ${ALL_DEVICE_TARGETS})
     if(IASL_AVAILABLE)
         add_custom_command(
             OUTPUT ${DSL_FILE}
-            COMMAND ${IASL_EXECUTABLE} -d ${AML_FILE} > ${IASL_LOG_FILE} 2>&1 || true
+            COMMAND ${IASL_EXECUTABLE} -d ${AML_FILE} >> ${DEVICE_IASL_LOG_FILE} 2>&1 || true
+            COMMAND ${CMAKE_COMMAND} -E rename ${HEX_OUTPUT_DIR}/${TABLE_NAME_UPPER}.hex ${HEX_OUTPUT_DIR}/${DEVICE_NAME}_${TABLE_NAME_UPPER}.hex 2>/dev/null || true
             COMMAND ${CMAKE_COMMAND} -E rename ${TARGET_OUTPUT_DIR}/${TABLE_NAME_UPPER}.dsl ${DSL_FILE} || true
             DEPENDS ${AML_FILE}
-            WORKING_DIRECTORY ${TARGET_OUTPUT_DIR}
-            COMMENT "Decompiling ${DEVICE_NAME}/${TABLE_NAME_UPPER}.aml -> ${TABLE_NAME_UPPER}.dsl (log: ${TABLE_NAME_UPPER}_iasl.log)..."
+            WORKING_DIRECTORY ${HEX_OUTPUT_DIR}
+            COMMENT "Decompiling ${DEVICE_NAME}/${TABLE_NAME_UPPER}.aml -> ${TABLE_NAME_UPPER}.dsl (log: iasl.log)..."
             VERBATIM
         )
         

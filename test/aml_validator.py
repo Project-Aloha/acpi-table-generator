@@ -142,10 +142,19 @@ def validate_aml_file(file_path):
     
     # Validate checksum
     calculated_checksum = calculate_checksum(data)
-    if calculated_checksum != 0:
-        print(f"❌ Checksum error: calculated 0x{calculated_checksum:02x} (should be 0)")
-        return False
-    print(f"✅ Checksum correct: 0x{header.checksum:02x}")
+    # FACS (Firmware ACPI Control Structure) is not required to have an
+    # ACPI header checksum in-place; allow non-zero checksum for FACS as a
+    # compatibility workaround.
+    if header.signature == 'FACS':
+        if calculated_checksum == 0:
+            print(f"✅ Checksum correct (FACS): 0x{header.checksum:02x}")
+        else:
+            print(f"ℹ️  FACS table: checksum not required/verified (calculated 0x{calculated_checksum:02x})")
+    else:
+        if calculated_checksum != 0:
+            print(f"❌ Checksum error: calculated 0x{calculated_checksum:02x} (should be 0)")
+            return False
+        print(f"✅ Checksum correct: 0x{header.checksum:02x}")
     
     # Validate structure (PPTT-specific validation)
     if header.signature == 'PPTT':
