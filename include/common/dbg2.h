@@ -4,7 +4,7 @@
 /** Reference
     https://learn.microsoft.com/en-us/windows-hardware/drivers/bringup/acpi-debug-port-table
 */
-//
+
 /* Table signature */
 #define ACPI_DBG2_SIGNATURE 'D', 'B', 'G', '2'
 #define ACPI_DBG2_REVISION 1
@@ -123,6 +123,13 @@ enum DBG2_DEBUG_PORT_SUBTYPE_NET {
     DBG2_HEADER_EXTRA_DATA Dbg2HeaderExtraData;                                \
     __VA_OPT__(__VA_ARGS__)                                                    \
   } __attribute__((packed)) ACPI_DBG2_TABLE_STRUCTURE_NAME;
+
+#define DBG2_DECLARE_HEADER_EXTRA_DATA(info_count)                             \
+  .Dbg2HeaderExtraData = {                                                     \
+      .OffsetDbgDeviceInfo =                                                   \
+          sizeof(ACPI_TABLE_HEADER) + sizeof(DBG2_HEADER_EXTRA_DATA),          \
+      .NumberOfDbgDevices = info_count,                                        \
+  }
 
 #define DBG2_GET_DEBUG_DEVICE_INFO_STRUCTURE_NAME(name)                        \
   DBG2_DEBUG_DEVICE_INFO_STRUCTURE_##name
