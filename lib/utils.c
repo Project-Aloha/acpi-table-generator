@@ -44,7 +44,10 @@ uint8_t *read_file_content(FileContent *fileContent) {
     FILE *pFile = fopen(fileContent->filePath, "rb");
     if (pFile == NULL)
         return NULL;
-    fread(fileContent->fileBuffer, fileContent->fileSize, 1, pFile);
+    if(fread(fileContent->fileBuffer, fileContent->fileSize, 1, pFile) != 1) {
+        fclose(pFile);
+        return NULL;
+    }
     fclose(pFile);
     return fileContent->fileBuffer;
 }
