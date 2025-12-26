@@ -20,7 +20,7 @@ typedef struct {
 } __attribute__((packed)) ACPI_GAS;
 _Static_assert(sizeof(ACPI_GAS) == 12, "ACPI_GAS size incorrect");
 
-/* Body Structures */
+/* Header Extra Data */
 typedef struct {
   UINT32 OffsetDbgDeviceInfo;
   UINT32 NumberOfDbgDevices;
@@ -29,6 +29,7 @@ typedef struct {
 _Static_assert(sizeof(DBG2_HEADER_EXTRA_DATA) == 8,
                "DBG2_HEADER_EXTRA_DATA size incorrect");
 
+/* Body Structures */
 enum DBG2_DEBUG_PORT_TYPE {
   DBG2_DEBUG_PORT_TYPE_RESERVED = 0,
   /* 0-0x7FFF are reserved */
