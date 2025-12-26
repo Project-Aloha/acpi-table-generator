@@ -1,4 +1,4 @@
-# ACPI table genetor
+# ACPI Table Generator
 This is a tool aim to generate common acpi table aml files for multiple platforms. It also provides tools to gather infomations from android device tree.
 
 ---
